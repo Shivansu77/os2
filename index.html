@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Booking System</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+    table { width: 60%; margin: auto; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+    th { background-color: #f4f4f4; }
+    .available { background-color: #d4edda; color: #155724; }
+    .booked { background-color: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h1>Real-Time Booking System</h1>
+  <label for="username">Enter Your Name:</label>
+  <input type="text" id="username" placeholder="Your Name">
+  
+  <table>
+    <tr>
+      <th>Resource</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+    <tr>
+      <td>Room 1</td>
+      <td id="Room 1-status" class="available">Available</td>
+      <td><button id="Room 1-btn" onclick="bookResource('Room 1')">Book</button></td>
+    </tr>
+    <tr>
+      <td>Room 2</td>
+      <td id="Room 2-status" class="available">Available</td>
+      <td><button id="Room 2-btn" onclick="bookResource('Room 2')">Book</button></td>
+    </tr>
+  </table>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:8080');
+
+    socket.onmessage = (event) => {
+      const resources = JSON.parse(event.data);
+      updateUI(resources);
+    };
+
+    function bookResource(resource) {
+      const username = document.getElementById("username").value.trim();
+      if (!username) {
+        alert("Please enter your name before booking.");
+        return;
+      }
+
+      const message = JSON.stringify({ user: username, resource });
+      socket.send(message);
+    }
+
+    function updateUI(resources) {
+      for (let resource in resources) {
+        const statusCell = document.getElementById(`${resource}-status`);
+        const button = document.getElementById(`${resource}-btn`);
+        
+        if (resources[resource].startsWith("Booked")) {
+          statusCell.textContent = resources[resource];
+          statusCell.className = "booked";
+          button.disabled = true;
+        } else {
+          statusCell.textContent = "Available";
+          statusCell.className = "available";
+          button.disabled = false;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
